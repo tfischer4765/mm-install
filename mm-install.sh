@@ -1600,7 +1600,9 @@ xset s off         # don't activate screensaver
 xset -dpms         # disable DPMS (Energy Star) features.
 xset s noblank     # don't blank the video device
 
-xrandr --output HDMI-1 # --rotate right
+if [ -e /etc/magicmirror/xrandr_opts ]; then
+    xrandr $(< /etc/magicmirror/xrandr_opts)
+endif
 
 xsetroot -solid black
 
@@ -1625,6 +1627,52 @@ WantedBy=multi-user.target
 EOF
 )
 
+MAGICMIRROR_SERVICE=$(cat << 'EOF'
+[Unit]
+Requires=xserver.service
+After=xserver.service
+Description=MagicMirror
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+WorkingDirectory=/usr/local/share/magicmirror/
+ExecStart=/usr/bin/npm start
+
+[Install]
+WantedBy=multi-user.target
+EOF
+)
+
+complain() {
+    echo $1
+    exit 1
+}
+
+consent() {
+    local max_tries="${2:-3}"
+     local input=""
+    local attempts=0
+    local matchphrase=$1
+    echo -n "Please enter '$matchphrase' to continue: "
+    while [ $attempts -lt $max_tries ]; do
+         read input
+         if [ "$input" == "$matchphrase" ]; then
+            return 0
+        fi
+
+        attempts=$((attempts + 1))
+        echo -n "Please enter '$matchphrase' to continue ($((max_tries - attempts)) tries left): "
+    done
+
+    echo "Consent not given, exiting."
+    exit 1
+}
+
 # Function to get user confirmation
 yes_no() {
     local max_tries="${1:-3}"
@@ -1644,6 +1692,8 @@ yes_no() {
         "não" "nem" "b"              # Portuguese, Croatian, Finnish
     )
 
+    echo -n " (y/N): "
+
     while [ $attempts -lt $max_tries ]; do
         read input
         # Convert input to lowercase
@@ -1652,27 +1702,24 @@ yes_no() {
         # Check if input is in the list of yes variants
         for yes in "${yes_variants[@]}"; do
             if [ "$input" == "$yes" ]; then
-                echo 1
-                return 0
+                return 1
             fi
         done
 
         # Check if input is in the list of no variants
         for no in "${no_variants[@]}"; do
             if [ "$input" == "$no" ]; then
-                echo 0
                 return 0
             fi
         done
 
         attempts=$((attempts + 1))
-        echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."
+        if [ $attempts -lt $max_tries ]; then echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."; fi
     done
 
     # If maximum attempts are exceeded, assume 'no'
-    echo 0
+    return 0
 }
-
 #set up some environment variables
 
 
@@ -1693,48 +1740,71 @@ if ! consent "I do not plan to use it for anything but magic mirror"; then
 fi
 
 echo "For technical reasons, the X server will have to start as root. This can cause security issues and become an"
-echo "Entry point for malicious elements and privilege escalation. It is essential that you secure your system"
+echo "entry point for malicious elements and privilege escalation. It is essential that you secure your system"
 echo "properly against unauthorized access"
 echo
 
 if ! consent "I will secure my system properly"; then
     exit 1
 fi
-
-echo "The install process can set up and install nodejs and npm for you. Do you want it to do that?"
 echo
-t = $(yes_no 2)
-if [ t -eq 1] ; then
+echo -n "The install process can set up and install nodejs and npm for you. Do you want it to do that?"
+yes_no 2
+if [ $? -eq 1 ] ; then
     INSTALL_NODE=1
 fi
-
-echo "The install process can also clone and install MagicMirror. Do you want that to happen?"
 echo
-t= $(yes_no 2)
-if [ t -eq 1 ] ; then
+echo -n "The install process can also clone and install MagicMirror. Do you want that to happen?"
+yes_no 2
+if [ $? -eq 1 ] ; then
     INSTALL_MM=1
 fi
 
 if [ $INSTALL_MM -eq 1 ]; then
-    echo "We also have some scripts available that will automatically keep MagicMirror updated. Do you want that?"
     echo
-    t= $(yes_no 2)
-    if [ t -eq 1 ] ; then
-        INSTALL_MAIN_SCRIPTS=1
+    echo "We can link the configuration and modules directory of MagicMirror into /etc for easy access."
+    echo "the /modules and /config directories will be made available in /etc/magicmirror."
+    echo -n "Do you want that to happen?"
+    yes_no 2
+    if [ $? -eq 1 ] ; then
+        USE_OVERLAY=1
+    fi
+    echo
+    echo -n "Should we configure systemd to start MM2 automatically?"
+    yes_no 2
+    if [ $? -eq 1 ] ; then
+        AUTOSTART_MM=1
     fi
 
-    echo "Last but not least, we also have scripts to offer to keep your modules updated. Do you want those installed?"
-    echo
-    t= $(yes_no 2)
-    if [ t -eq 1 ] ; then
-        INSTALL_MODULE_SCRIPTS=1
-    fi
+    #echo
+    #echo "We also have some scripts available that will automatically keep MagicMirror updated. Do you want that?"
+    #echo
+    #yes_no 2
+    #if [ $? -eq 1 ] ; then
+    #    UPDATE_MM=1
+    #fi
+    #echo
+    #echo "Last but not least, we also have scripts to offer to keep your modules updated. Do you want those installed?"
+    #echo
+    #yes_no 2
+    #if [ $? -eq 1 ] ; then
+    #    UPDATE_MODULES=1
+    #fi
 fi
-
+echo
+echo
 echo "Summary:"
-echo 
-
-
+echo -e "\t We will install a bare-bones X server and configure it to run at startup"
+if [[ -v INSTALL_NODE ]]; then echo -e "\t- We will configure nodejs repositories and install node.js and npm"; fi
+if [[ -v INSTALL_MM ]]; then echo   -e "\t- We will clone MagicMirror2"; fi
+if [[ -v INSTALL_MM && -v INSTALL_NODE ]]; then echo -e "\t- We will install and configure MagicMirror2"; else echo -e "\t- You will need to install MM2 manually after installing node.js"; fi
+if [[ -v USE_OVERLAY ]]; then echo  -e "\t- We will link config and modules directory into /etc/magicmirror"; fi
+if [[ -v AUTOSTART_MM ]]; then echo -e       "\t- We will install a systemd service to start MM2 at startup"; fi
+echo
+echo Do you want to proceed?
+if ! consent "Proceed"; then
+    exit 1
+fi
 
 #install the necessary software
 
@@ -1743,34 +1813,53 @@ apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy
 
 # install node and npm on raspbian
 
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
-echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
-
-apt update && apt install --no-install-recommends -y nodejs
 
 #copy stuff where it needs to be
-mkdir -p /usr/local/share/mm-support
-mkdir -p /usr/local/share/magicmirror
-mkdir /etc/magicmirror
-echo $XSERVER_SERVICE > /usr/local/share/mm-support/xserver.service
-echo $XINITRC > /usr/local/share/mm-support/xinitrc
-echo "$BLACKPIXEL"| base64 --decode > /usr/local/share/mm-support/blackpixel
-chmod +x /usr/local/share/mm-support/blackpixel
-echo "$PI_BACKGROUND_PNG"| base64 --decode > /usr/local/share/mm-support/pi-background.png
+mkdir -p /usr/local/share/mm-support && \
+mkdir -p /usr/local/share/magicmirror && \
+mkdir /etc/magicmirror && \
+echo $XSERVER_SERVICE > /usr/local/share/mm-support/xserver.service && \
+ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
+echo $XINITRC > /usr/local/share/mm-support/xinitrc && \
+ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc && \
+echo "$BLACKPIXEL"| base64 --decode > /usr/local/share/mm-support/blackpixel && \
+chmod +x /usr/local/share/mm-support/blackpixel && \
+ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel && \
+echo "$PI_BACKGROUND_PNG"| base64 --decode > /usr/local/share/mm-support/pi-background.png && \
+systemctl daemon-reload && \
+systemctl enable xserver.service && \
+echo "Xserver has been installed and configured to run at startup" || \
+complain "Something went wrong installing the Xserver"
 
-chmod +x /usr/local/share/mm-support/blackpixel
-cp xserver.service /etc/systemd/system/
-ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc
-ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel
+if [[ -v INSTALL_NODE ]]; then
+  # TODO use nvm instead?
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
 
-
+  apt update && apt install --no-install-recommends -y nodejs
+fi
 
 # configure X to be startable as root only, but drop root privilieges after start
 echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.config
 
-cd /usr/local/share/magicmirror && git clone git clone https://github.com/MagicMirrorOrg/MagicMirror . && npm run install-mm
+if [[ -v INSTALL_MM ]]; then
 
-npm install -g pm2
+  cd /usr/local/share/magicmirror && git clone git clone https://github.com/MagicMirrorOrg/MagicMirror . && [[ -v INSTALL_NODE ]] && npm run install-mm || \
+  echo "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install\" manually after this script completes and nodejs is installed"
+
+  if [[  -v USE_OVERLAY ]]; then
+    echo Would install Overlay if I could
+    #TODO configure overlay
+  fi
 
 
+  if [[ -v AUTOSTART_MM ]]; then
+     echo $MAGICMIRROR_SERVICE > /usr/local/share/mm-support/magicmirror.service && \
+     ln -s /usr/local/share/mm-support/magicmirror.service /etc/systemd/system/magicmirror.service && \
+     systemctl daemon-reload && \
+     systemctl enable magicmirror.service
+
+  fi
+
+fi
 
