@@ -1767,7 +1767,7 @@ fi
 
 #install the necessary software
 
-apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip
+apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip xli
 
 
 
@@ -1822,4 +1822,14 @@ if [[ -v INSTALL_MM ]]; then
   fi
 
 fi
+
+echo
+echo "Install is done. System is ready to use."
+echo -e "Your remaining chores:"
+if [[ ! -v INSTALL_NODE ]]; then echo -e "\t- Install node.js"; fi
+if [[ ! -v INSTALL_MM ]]; then echo -e "\t- Download MagicMirror2"; fi
+if [[ -v INSTALL_MM && ! -v INSTALL_NODE ]]; then echo -e "\t- Install MM"; fi
+echo -e "\t- Create a magicmirror configuration"
+echo -e "
+echo -e "\t- Reboot your system"
 
