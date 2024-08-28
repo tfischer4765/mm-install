@@ -7,6 +7,35 @@
 
 # embedded files
 
+
+XINITRC=$(cat <<EOF
+IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
+cgp4c2V0IC1kcG1zICAgICAgICAgIyBkaXNhYmxlIERQTVMgKEVuZXJneSBTdGFyKSBmZWF0dXJl
+cy4KeHNldCBzIG5vYmxhbmsgICAgICMgZG9uJ3QgYmxhbmsgdGhlIHZpZGVvIGRldmljZQoKeHJh
+bmRyIC0tb3V0cHV0IEhETUktMSAtLXJvdGF0ZSByaWdodAoKeHNldHJvb3QgLXNvbGlkIHN0ZWVs
+Ymx1ZQoKeGxpIC1vbnJvb3QgL3Vzci9sb2NhbC9zaGFyZS9tbS1zdXBwb3J0L3BpLWJhY2tncm91
+bmQucG5nCgpleGVjIC91c3IvbG9jYWwvYmluL2JsYWNrcGl4ZWwK
+EOF 
+)
+
+XSERVER_SERVICE=$(cat <<EOF
+W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
+CltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpFeGVjU3RhcnQ9L3Vzci9iaW4veGluaXQgL2V0Yy9tYWdp
+Y21pcnJvci94aW5pdHJjIC0tIC1ub2N1cnNvciA6MApSZXN0YXJ0PW9uLWZhaWx1cmUKCltJbnN0
+YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK
+EOF
+)
+
+MAGICMIRROR_SERVICE=$(cat <<EOF
+W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
+Y3JpcHRpb249TWFnaWNNaXJyb3IKQWZ0ZXI9bmV0d29yay50YXJnZXQKU3RhcnRMaW1pdEludGVy
+dmFsU2VjPTAKCltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpSZXN0YXJ0PWFsd2F5cwpSZXN0YXJ0U2Vj
+PTEKVXNlcj1waQpXb3JraW5nRGlyZWN0b3J5PS91c3IvbG9jYWwvc2hhcmUvbWFnaWNtaXJyb3Iv
+CkV4ZWNTdGFydD0vdXNyL2Jpbi9ucG0gc3RhcnQKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11
+c2VyLnRhcmdldAo=
+EOF
+)
+
 BLACKPIXEL=$(cat <<EOF
 f0VMRgIBAQAAAAAAAAAAAAMAtwABAAAAgAsAAAAAAABAAAAAAAAAAMAOAQAAAAAAAAAAAEAAOAAJ
 AEAAHQAcAAYAAAAEAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAA+AEAAAAAAAD4AQAAAAAAAAgA
@@ -1593,60 +1622,6 @@ AAAAQJ7AAQAAAOQJHAAAAECewAEAAADk/QGz+FxYg+4BdAAAAABJRU5ErkJggg==
 EOF
 )
 
-XINITRC=$(cat <<'EOF'
-#!/bin/sh\n
-\n
-xset s off         # don't activate screensaver\n
-xset -dpms         # disable DPMS (Energy Star) features.\n
-xset s noblank     # don't blank the video device\n
-\n
-if [ -e /etc/magicmirror/xrandr_opts ]; then\n
-    xrandr $(< /etc/magicmirror/xrandr_opts)\n
-endif\n
-\n
-xsetroot -solid black\n
-\n
-xli -onroot /usr/local/share/mm-support/pi-background.png\n
-\n
-exec /usr/local/bin/blackpixel
-EOF 
-)
-
-XSERVER_SERVICE=$(cat <<'EOF'
-[Unit]\n
-Description=Minimal X Server\n
-After=network.target\n
-\n
-[Service]\n
-Type=simple\n
-ExecStart=/usr/bin/xinit /etc/magicmirror/xinitrc -- -nocursor :0\n
-Restart=on-failure\n
-\n
-[Install]\n
-WantedBy=multi-user.target\n
-EOF
-)
-
-MAGICMIRROR_SERVICE=$(cat <<'EOF'
-[Unit]\n
-Requires=xserver.service\n
-After=xserver.service\n
-Description=MagicMirror\n
-After=network.target\n
-StartLimitIntervalSec=0\n
-\n
-[Service]\n
-Type=simple\n
-Restart=always\n
-RestartSec=1\n
-User=pi\n
-WorkingDirectory=/usr/local/share/magicmirror/\n
-ExecStart=/usr/bin/npm start\n
-\n
-[Install]\n 
-WantedBy=multi-user.target
-EOF
-)
 
 complain() {
     echo $1
@@ -1807,26 +1782,27 @@ fi
 apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip
 
 
-# install node and npm on raspbian
+
 
 
 #copy stuff where it needs to be
 mkdir -p /usr/local/share/mm-support && \
 mkdir -p /usr/local/share/magicmirror && \
 mkdir /etc/magicmirror && \
-echo $XSERVER_SERVICE > /usr/local/share/mm-support/xserver.service && \
+echo "$XSERVER_SERVICE" | base64 --decode > /usr/local/share/mm-support/xserver.service && \
 ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
-echo $XINITRC > /usr/local/share/mm-support/xinitrc && \
+echo "$XINITRC" | base64 --decode > /usr/local/share/mm-support/xinitrc && \
 ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc && \
-echo "$BLACKPIXEL"| base64 --decode > /usr/local/share/mm-support/blackpixel && \
+echo "$BLACKPIXEL" | base64 --decode > /usr/local/share/mm-support/blackpixel && \
 chmod +x /usr/local/share/mm-support/blackpixel && \
 ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel && \
-echo "$PI_BACKGROUND_PNG"| base64 --decode > /usr/local/share/mm-support/pi-background.png && \
+echo "$PI_BACKGROUND_PNG" | base64 --decode > /usr/local/share/mm-support/pi-background.png && \
 systemctl daemon-reload && \
 systemctl enable xserver.service && \
 echo "Xserver has been installed and configured to run at startup" || \
 complain "Something went wrong installing the Xserver"
 
+# install node and npm on raspbian
 if [[ -v INSTALL_NODE ]]; then
   # TODO use nvm instead?
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
@@ -1840,7 +1816,7 @@ echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.confi
 
 if [[ -v INSTALL_MM ]]; then
 
-  cd /usr/local/share/magicmirror && git clone git clone https://github.com/MagicMirrorOrg/MagicMirror . && [[ -v INSTALL_NODE ]] && npm run install-mm || \
+  cd /usr/local/share/magicmirror && git clone https://github.com/MagicMirrorOrg/MagicMirror . && [[ -v INSTALL_NODE ]] && npm run install-mm || \
   echo "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install\" manually after this script completes and nodejs is installed"
 
   if [[  -v USE_OVERLAY ]]; then
@@ -1850,7 +1826,7 @@ if [[ -v INSTALL_MM ]]; then
 
 
   if [[ -v AUTOSTART_MM ]]; then
-     echo $MAGICMIRROR_SERVICE > /usr/local/share/mm-support/magicmirror.service && \
+     echo "$MAGICMIRROR_SERVICE" | base64 --decode > /usr/local/share/mm-support/magicmirror.service && \
      ln -s /usr/local/share/mm-support/magicmirror.service /etc/systemd/system/magicmirror.service && \
      systemctl daemon-reload && \
      systemctl enable magicmirror.service
