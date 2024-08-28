@@ -1594,56 +1594,56 @@ EOF
 )
 
 XINITRC=$(cat <<'EOF'
-#!/bin/sh
-
-xset s off         # don't activate screensaver
-xset -dpms         # disable DPMS (Energy Star) features.
-xset s noblank     # don't blank the video device
-
-if [ -e /etc/magicmirror/xrandr_opts ]; then
-    xrandr $(< /etc/magicmirror/xrandr_opts)
-endif
-
-xsetroot -solid black
-
-xli -onroot /usr/local/share/mm-support/pi-background.png
-
+#!/bin/sh\n
+\n
+xset s off         # don't activate screensaver\n
+xset -dpms         # disable DPMS (Energy Star) features.\n
+xset s noblank     # don't blank the video device\n
+\n
+if [ -e /etc/magicmirror/xrandr_opts ]; then\n
+    xrandr $(< /etc/magicmirror/xrandr_opts)\n
+endif\n
+\n
+xsetroot -solid black\n
+\n
+xli -onroot /usr/local/share/mm-support/pi-background.png\n
+\n
 exec /usr/local/bin/blackpixel
 EOF 
 )
 
 XSERVER_SERVICE=$(cat <<'EOF'
-[Unit]
-Description=Minimal X Server
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/xinit /etc/magicmirror/xinitrc -- -nocursor :0
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+[Unit]\n
+Description=Minimal X Server\n
+After=network.target\n
+\n
+[Service]\n
+Type=simple\n
+ExecStart=/usr/bin/xinit /etc/magicmirror/xinitrc -- -nocursor :0\n
+Restart=on-failure\n
+\n
+[Install]\n
+WantedBy=multi-user.target\n
 EOF
 )
 
-MAGICMIRROR_SERVICE=$(cat << 'EOF'
-[Unit]
-Requires=xserver.service
-After=xserver.service
-Description=MagicMirror
-After=network.target
-StartLimitIntervalSec=0
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=1
-User=pi
-WorkingDirectory=/usr/local/share/magicmirror/
-ExecStart=/usr/bin/npm start
-
-[Install]
+MAGICMIRROR_SERVICE=$(cat <<'EOF'
+[Unit]\n
+Requires=xserver.service\n
+After=xserver.service\n
+Description=MagicMirror\n
+After=network.target\n
+StartLimitIntervalSec=0\n
+\n
+[Service]\n
+Type=simple\n
+Restart=always\n
+RestartSec=1\n
+User=pi\n
+WorkingDirectory=/usr/local/share/magicmirror/\n
+ExecStart=/usr/bin/npm start\n
+\n
+[Install]\n 
 WantedBy=multi-user.target
 EOF
 )
@@ -1735,16 +1735,12 @@ fi
 echo "This script will set up your raspberry pi to run a minimal X setup suitable for MagicMirror and not much else."
 echo "Do not run it if you plan on using this pi for any other graphical stuff"
 echo
-if ! consent "I do not plan to use it for anything but magic mirror"; then
-    exit 1
-fi
-
 echo "For technical reasons, the X server will have to start as root. This can cause security issues and become an"
 echo "entry point for malicious elements and privilege escalation. It is essential that you secure your system"
 echo "properly against unauthorized access"
 echo
 
-if ! consent "I will secure my system properly"; then
+if ! consent "I understand"; then
     exit 1
 fi
 echo
