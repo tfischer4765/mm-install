@@ -8,36 +8,27 @@
 # embedded files
 
 
-XINITRC=$(cat <<EOF
-IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
+base64 -d > /tmp/xinitrc <<< 'IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
 cgp4c2V0IC1kcG1zICAgICAgICAgIyBkaXNhYmxlIERQTVMgKEVuZXJneSBTdGFyKSBmZWF0dXJl
 cy4KeHNldCBzIG5vYmxhbmsgICAgICMgZG9uJ3QgYmxhbmsgdGhlIHZpZGVvIGRldmljZQoKeHJh
 bmRyIC0tb3V0cHV0IEhETUktMSAtLXJvdGF0ZSByaWdodAoKeHNldHJvb3QgLXNvbGlkIHN0ZWVs
 Ymx1ZQoKeGxpIC1vbnJvb3QgL3Vzci9sb2NhbC9zaGFyZS9tbS1zdXBwb3J0L3BpLWJhY2tncm91
-bmQucG5nCgpleGVjIC91c3IvbG9jYWwvYmluL2JsYWNrcGl4ZWwK
-EOF 
-)
+bmQucG5nCgpleGVjIC91c3IvbG9jYWwvYmluL2JsYWNrcGl4ZWwK'
 
-XSERVER_SERVICE=$(cat <<EOF
-W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
+base64 -d > /tmp/xserver.service <<< 'W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
 CltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpFeGVjU3RhcnQ9L3Vzci9iaW4veGluaXQgL2V0Yy9tYWdp
 Y21pcnJvci94aW5pdHJjIC0tIC1ub2N1cnNvciA6MApSZXN0YXJ0PW9uLWZhaWx1cmUKCltJbnN0
-YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK
-EOF
-)
+YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK'
 
-MAGICMIRROR_SERVICE=$(cat <<EOF
-W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
+base64 -d > /tmp/magicmirror.service <<<'W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
 Y3JpcHRpb249TWFnaWNNaXJyb3IKQWZ0ZXI9bmV0d29yay50YXJnZXQKU3RhcnRMaW1pdEludGVy
 dmFsU2VjPTAKCltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpSZXN0YXJ0PWFsd2F5cwpSZXN0YXJ0U2Vj
 PTEKVXNlcj1waQpXb3JraW5nRGlyZWN0b3J5PS91c3IvbG9jYWwvc2hhcmUvbWFnaWNtaXJyb3Iv
 CkV4ZWNTdGFydD0vdXNyL2Jpbi9ucG0gc3RhcnQKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11
-c2VyLnRhcmdldAo=
-EOF
-)
+c2VyLnRhcmdldAo='
 
-BLACKPIXEL=$(cat <<EOF
-f0VMRgIBAQAAAAAAAAAAAAMAtwABAAAAgAsAAAAAAABAAAAAAAAAAMAOAQAAAAAAAAAAAEAAOAAJ
+
+base64 -d > /tmp/blackpixel <<<'f0VMRgIBAQAAAAAAAAAAAAMAtwABAAAAgAsAAAAAAABAAAAAAAAAAMAOAQAAAAAAAAAAAEAAOAAJ
 AEAAHQAcAAYAAAAEAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAA+AEAAAAAAAD4AQAAAAAAAAgA
 AAAAAAAAAwAAAAQAAAA4AgAAAAAAADgCAAAAAAAAOAIAAAAAAAAbAAAAAAAAABsAAAAAAAAAAQAA
 AAAAAAABAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOQQAAAAAAAA5BAAAAAAAAAAAAEA
@@ -1285,12 +1276,10 @@ AAAAAPoAAAABAAAAMAAAAAAAAAAAAAAAAAAAAJkAAQAAAAAAHwAAAAAAAAAAAAAAAAAAAAEAAAAA
 AAAAAQAAAAAAAAABAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAC4AAEAAAAAAPAJAAAAAAAAGwAAAEMA
 AAAIAAAAAAAAABgAAAAAAAAACQAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAqAoBAAAAAAATAwAAAAAA
 AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAABEAAAADAAAAAAAAAAAAAAAAAAAAAAAAALsNAQAAAAAA
-AwEAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAA=
-EOF
-)
+AwEAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAA='
 
-PI_BACKGROUND_PNG=$(cat <<EOF
-iVBORw0KGgoAAAANSUhEUgAABDgAAAeACAYAAAArYecKAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9
+
+base64 -d >/tmp/pi_background.png <<<'iVBORw0KGgoAAAANSUhEUgAABDgAAAeACAYAAAArYecKAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9
 kTtIw1AUhv+mSkUqInYQ6ZChOlkQXzhqFYpQIdQKrTqY3PQhNGlIUlwcBdeCg4/FqoOLs64OroIg
 +ABxdnBSdJESz00KLWK8cLgf/73/z7nnAkK9zDSrYxTQdNtMJxNiNrcihl4RQhR9VJMys4xZSUrB
 d33dI8D3uzjP8r/35+pR8xYDAiLxDDNMm3ideGrTNjjvE0dYSVaJz4lHTGqQ+JHrisdvnIsuCzwz
@@ -1618,9 +1607,8 @@ AQAAAOQJHAAAAECewAEAAADkCRwAAABAnsABAAAA5AkcAAAAQJ7AAQAAAOQJHAAAAECewAEAAADk
 CRwAAABAnsABAAAA5AkcAAAAQJ7AAQAAAOQJHAAAAECewAEAAADkCRwAAABAnsABAAAA5AkcAAAA
 QJ7AAQAAAOQJHAAAAECewAEAAADkCRwAAABAnsABAAAA5AkcAAAAQJ7AAQAAAOQJHAAAAECewAEA
 AADkCRwAAABAnsABAAAA5AkcAAAAQJ7AAQAAAOQJHAAAAECewAEAAADkCRwAAABAnsABAAAA5Akc
-AAAAQJ7AAQAAAOQJHAAAAECewAEAAADk/QGz+FxYg+4BdAAAAABJRU5ErkJggg==
-EOF
-)
+AAAAQJ7AAQAAAOQJHAAAAECewAEAAADk/QGz+FxYg+4BdAAAAABJRU5ErkJggg=='
+
 
 
 complain() {
@@ -1789,14 +1777,14 @@ apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy
 mkdir -p /usr/local/share/mm-support && \
 mkdir -p /usr/local/share/magicmirror && \
 mkdir /etc/magicmirror && \
-echo "$XSERVER_SERVICE" | base64 --decode > /usr/local/share/mm-support/xserver.service && \
+cp /tmp/xserver.service /usr/local/share/mm-support/xserver.service && \
 ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
-echo "$XINITRC" | base64 --decode > /usr/local/share/mm-support/xinitrc && \
+cp /tmp/xinitrc /usr/local/share/mm-support/xinitrc && \
 ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc && \
-echo "$BLACKPIXEL" | base64 --decode > /usr/local/share/mm-support/blackpixel && \
+cp /tmp/blackpixel /usr/local/share/mm-support/blackpixel && \
 chmod +x /usr/local/share/mm-support/blackpixel && \
 ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel && \
-echo "$PI_BACKGROUND_PNG" | base64 --decode > /usr/local/share/mm-support/pi-background.png && \
+cp /tmp/pi_background.png /usr/local/share/mm-support/pi-background.png && \
 systemctl daemon-reload && \
 systemctl enable xserver.service && \
 echo "Xserver has been installed and configured to run at startup" || \
@@ -1826,7 +1814,7 @@ if [[ -v INSTALL_MM ]]; then
 
 
   if [[ -v AUTOSTART_MM ]]; then
-     echo "$MAGICMIRROR_SERVICE" | base64 --decode > /usr/local/share/mm-support/magicmirror.service && \
+     cp /tmp/magicmirror.service /usr/local/share/mm-support/magicmirror.service && \
      ln -s /usr/local/share/mm-support/magicmirror.service /etc/systemd/system/magicmirror.service && \
      systemctl daemon-reload && \
      systemctl enable magicmirror.service
