@@ -1840,7 +1840,7 @@ if [[ -v INSTALL_MM ]]; then
 
   if [[ -v AUTOSTART_MM ]]; then
      banner "Setting up MagicMirror to start on boot"
-     cp /tmp/magicmirror.service /usr/local/share/mm-support/magicmirror.service && \
+     cp /tmp/mm-install/magicmirror.service /usr/local/share/mm-support/magicmirror.service && \
      ln -s /usr/local/share/mm-support/magicmirror.service /etc/systemd/system/magicmirror.service && \
      systemctl daemon-reload && \
      systemctl enable magicmirror.service && \
