@@ -99,7 +99,7 @@ if [ -e /usr/local/share/mm-support -o -e /usr/local/share/magicmirror -o -e /et
 fi
 
 # embedded files
-
+mkdir /tmp/mm-install
 
 base64 -d > /tmp/mm-install/xinitrc <<< 'IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
 cgp4c2V0IC1kcG1zICAgICAgICAgIyBkaXNhYmxlIERQTVMgKEVuZXJneSBTdGFyKSBmZWF0dXJl

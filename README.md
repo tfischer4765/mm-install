@@ -5,7 +5,7 @@ A single-script-installer to turn PiOS-lite into a magic mirror with minimal res
 ## Intended use
 This script is intended to prepare a working environment for, install and run MagicMirror2 on a pristine PiOS-lite image. It can easily be set up on SDcards as small as 8GB or possibly even smaller.
 
-### **Important: This script is written under the assumption that the user has a basic understanding of linux and X. If you don't know how to flash an image onto a sd card or download a file onto your linux disto via CLI, it is suggested you use the official installation method on the MagicMirror2 website. Follow the instructions in this README closely and check your preconditions. Using this script wrong WILL BREAK YOUR IMAGE!**
+### **Important: This script is written under the assumption that the user has a basic understanding of Linux and X. If you don't know how to flash an image onto a sd card or download a file onto your linux disto via CLI, it is suggested you use the official installation method on the MagicMirror2 website. Follow the instructions in this README closely and check your preconditions. Using this script wrong WILL BREAK YOUR IMAGE!**
 
 ### What it does
 The script asks you to select which steps of the following list you want it to perform. Depending on your selections, some of the following steps may or may not be available:
