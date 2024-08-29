@@ -1615,10 +1615,25 @@ AAAAQJ7AAQAAAOQJHAAAAECewAEAAADk/QGz+FxYg+4BdAAAAABJRU5ErkJggg=='
 
 
 
-complain() {
-    echo $1
+fatal() {
+    echo -e "\e[1;31m$1\e[0m"
     exit 1
 }
+
+banner() {
+    echo
+    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
+    echo -e "\e[1;4;37m$1\e[0m"
+    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
+    echo
+}
+
+
+warn() {
+    # Print the first argument in red and bold
+    echo -e "\e[1;33m$1\e[0m"
+}
+
 
 consent() {
     local max_tries="${2:-3}"
@@ -1626,8 +1641,8 @@ consent() {
     local attempts=0
     local matchphrase=$1
     echo -n "Please enter '$matchphrase' to continue: "
-    while [ $attempts -lt $max_tries ]; do
-         read input
+    while [ "$attempts" -lt "$max_tries" ]; do
+         read -r input
          if [ "$input" == "$matchphrase" ]; then
             return 0
         fi
@@ -1661,8 +1676,8 @@ yes_no() {
 
     echo -n " (y/N): "
 
-    while [ $attempts -lt $max_tries ]; do
-        read input
+    while [ "$attempts" -lt "$max_tries" ]; do
+        read -r input
         # Convert input to lowercase
         input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
 
@@ -1681,7 +1696,7 @@ yes_no() {
         done
 
         attempts=$((attempts + 1))
-        if [ $attempts -lt $max_tries ]; then echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."; fi
+        if [ "$attempts" -lt "$max_tries" ]; then echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."; fi
     done
 
     # If maximum attempts are exceeded, assume 'no'
@@ -1723,14 +1738,14 @@ if [ $? -eq 1 ] ; then
     INSTALL_MM=1
 fi
 
-if [ $INSTALL_MM -eq 1 ]; then
+if [ "$INSTALL_MM" -eq 1 ]; then
     echo
     echo "We can link the configuration and modules directory of MagicMirror into /etc for easy access."
     echo "the /modules and /config directories will be made available in /etc/magicmirror."
     echo -n "Do you want that to happen?"
     yes_no 2
     if [ $? -eq 1 ] ; then
-        USE_OVERLAY=1
+        LINK_CONFIG=1
     fi
     echo
     echo -n "Should we configure systemd to start MM2 automatically?"
@@ -1739,30 +1754,16 @@ if [ $INSTALL_MM -eq 1 ]; then
         AUTOSTART_MM=1
     fi
 
-    #echo
-    #echo "We also have some scripts available that will automatically keep MagicMirror updated. Do you want that?"
-    #echo
-    #yes_no 2
-    #if [ $? -eq 1 ] ; then
-    #    UPDATE_MM=1
-    #fi
-    #echo
-    #echo "Last but not least, we also have scripts to offer to keep your modules updated. Do you want those installed?"
-    #echo
-    #yes_no 2
-    #if [ $? -eq 1 ] ; then
-    #    UPDATE_MODULES=1
-    #fi
 fi
 echo
 echo
-echo "Summary:"
+banner "Summary:"
 echo -e "\t We will install a bare-bones X server and configure it to run at startup"
 if [[ -v INSTALL_NODE ]]; then echo -e "\t- We will configure nodejs repositories and install node.js and npm"; fi
 if [[ -v INSTALL_MM ]]; then echo   -e "\t- We will clone MagicMirror2"; fi
 if [[ -v INSTALL_MM && -v INSTALL_NODE ]]; then echo -e "\t- We will install and configure MagicMirror2"; else echo -e "\t- You will need to install MM2 manually after installing node.js"; fi
-if [[ -v USE_OVERLAY ]]; then echo  -e "\t- We will link config and modules directory into /etc/magicmirror"; fi
-if [[ -v AUTOSTART_MM ]]; then echo -e       "\t- We will install a systemd service to start MM2 at startup"; fi
+if [[ -v LINK_CONFIG ]]; then echo  -e "\t- We will link config and modules directory into /etc/magicmirror"; fi
+if [[ -v AUTOSTART_MM ]]; then echo -e "\t- We will install a systemd service to start MM2 at startup"; fi
 echo
 echo Do you want to proceed?
 if ! consent "Proceed"; then
@@ -1771,6 +1772,8 @@ fi
 
 #install the necessary software
 
+banner "Installing required system packages"
+
 apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip xli
 
 
@@ -1778,8 +1781,8 @@ apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy
 
 
 #copy stuff where it needs to be
+#TODO xinitrc should probably be in mm-support, but I'm too lazy to re-create the base64 for the unit file AGAIN right now
 mkdir -p /usr/local/share/mm-support && \
-mkdir -p /usr/local/share/magicmirror && \
 mkdir /etc/magicmirror && \
 cp /tmp/xserver.service /usr/local/share/mm-support/xserver.service && \
 ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
@@ -1789,51 +1792,66 @@ cp /tmp/blackpixel /usr/local/share/mm-support/blackpixel && \
 chmod +x /usr/local/share/mm-support/blackpixel && \
 ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel && \
 cp /tmp/pi_background.png /usr/local/share/mm-support/pi-background.png && \
+echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.config && \
 systemctl daemon-reload && \
 systemctl enable xserver.service && \
 echo "Xserver has been installed and configured to run at startup" || \
-complain "Something went wrong installing the Xserver"
+fatal "Something went wrong installing the Xserver"
 
 # install node and npm on raspbian
 if [[ -v INSTALL_NODE ]]; then
   # TODO use nvm instead?
-  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
-  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+    banner "Installing Node.js"
 
-  apt update && apt install --no-install-recommends -y nodejs
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg && \
+  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
+  apt update && apt install --no-install-recommends -y nodejs && \
+  echo "Node.js has been installed" || \
+  fatal "Something went wrong installing Node.js"
 fi
 
-# configure X to be startable as root only, but drop root privilieges after start
-echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.config
 
 if [[ -v INSTALL_MM ]]; then
+  banner "Installing MagicMirror2"  
+  mkdir -p /usr/local/share/magicmirror && \
+  cd /usr/local/share/magicmirror && \
+  git clone https://github.com/MagicMirrorOrg/MagicMirror . && \
+  [[ -v INSTALL_NODE ]] && npm run install-mm || \
+  warn "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install\" manually after this script completes and nodejs is installed"
 
-  cd /usr/local/share/magicmirror && git clone https://github.com/MagicMirrorOrg/MagicMirror . && [[ -v INSTALL_NODE ]] && npm run install-mm || \
-  echo "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install\" manually after this script completes and nodejs is installed"
-
-  if [[  -v USE_OVERLAY ]]; then
-    echo Would install Overlay if I could
-    #TODO configure overlay
+  
+  if [[  -v LINK_CONFIG ]]; then
+    banner "Linking config directories"
+    ln -s /usr/local/share/magicmirror/config /etc/magicmirror/config && \
+    ln -s /usr/local/share/magicmirror/modules /etc/magicmirror/modules && \
+    echo "Config and modules directory have been linked to /etc/magicmirror" ||
+    warn "Could not link config directories"
   fi
 
+ 
 
   if [[ -v AUTOSTART_MM ]]; then
+     banner "Setting up MagicMirror to start on boot"
      cp /tmp/magicmirror.service /usr/local/share/mm-support/magicmirror.service && \
      ln -s /usr/local/share/mm-support/magicmirror.service /etc/systemd/system/magicmirror.service && \
      systemctl daemon-reload && \
-     systemctl enable magicmirror.service
+     systemctl enable magicmirror.service && \
+     echo "MagicMirror2 has been set up to start at boot" || \
+     warn "Something went wrong setting up MagicMirror2 to run at startup"
 
   fi
 
 fi
 
 echo
-echo "Install is done. System is ready to use."
+banner "Install is done. System is ready to use."
 echo -e "Your remaining chores:"
 if [[ ! -v INSTALL_NODE ]]; then echo -e "\t- Install node.js"; fi
 if [[ ! -v INSTALL_MM ]]; then echo -e "\t- Download MagicMirror2"; fi
 if [[ -v INSTALL_MM && ! -v INSTALL_NODE ]]; then echo -e "\t- Install MM"; fi
+echo -e "\t- Install whatever modules you like"
 echo -e "\t- Create a magicmirror configuration"
-echo -e "
 echo -e "\t- Reboot your system"
+echo
+echo Enjoy!
 

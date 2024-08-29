@@ -12,7 +12,7 @@ The script asks you to select which steps of the following list you want it to p
  - Install a minimal X server setup and set it to start at boot
  - Set up nodesource and install node.js<sup>1</sup>
  - clone and install MagicMirror2 from the official repo<sup>1</sup>
- - set up an overlay for the configuration and modules<sup>1,2</sup>
+ - link configuration and modules to /etc for easy access<sup>1,2</sup>
  - set MagicMirror to be started by systemd<sup>1,2</sup>
  <sub>1: Only if requested 2: Only if MM2 install was chosen</sub>
 
@@ -26,7 +26,7 @@ The script asks you to select which steps of the following list you want it to p
 ## Installation
 - flash a PiOS lite onto an SD card. It is highly recommended to install an SSH key and wifi credentials while you are at it. If you don't, setting it up is your own responsibility, mm-install makes no provision to do so for you.
 - start your Pi, connect to it via your preferred method and do what you feel you need to do to finish the initial configuration
-- use curl to download the script from the following location: `https://raw.githubusercontent.com/tfischer4765/mm-install/latest-release/mm-install.sh` 
+- use curl to download the script from the following location: `https://raw.githubusercontent.com/tfischer4765/mm-install/latest-release/mm-install.sh`, or if you are feeling adventurous, try `https://raw.githubusercontent.com/tfischer4765/mm-install/master/mm-install.sh`
 - Run the script as root. **ROOT, mind you, *not* SUDO**
 - answer the configuration questions
 - let the script do its thing
@@ -37,8 +37,8 @@ The script asks you to select which steps of the following list you want it to p
 **The following applies ONLY if you selected to install MagicMirror via this script**
 
 If you selected to link your config to /etc, the following will be available:
-- the config.js file is stored in /etc/magicmirror/config/config.js
-- the modules directory is in /etc/magicmirror/modules. It is being pasted over /usr/local/share/magicmirror/modules using an overlay file system.
+- the config.js file is available in /etc/magicmirror/config/config.js
+- the modules directory is linked to /etc/magicmirror/modules.
 
 If you did chose to NOT link your config, they will be found in /usr/share/magicmirror.
 
@@ -60,5 +60,5 @@ By default, a background image is rendered alerting you to the fact that no Magi
 
 If you want to use a different file, create a file named `x_background_image` in `/etc/magicmirror` containing a path to an image file. If that file is present and the path in it leads to a readable file, that file will be attempted to be used instead
 
-**WARNING: The script will not ascertain that the file it gets handed is a valid image.**
+**WARNING: The script will not ascertain that the file it gets handed is a valid image file.**
 
