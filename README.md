@@ -5,7 +5,7 @@ A single-script-installer to turn PiOS-lite into a magic mirror with minimal res
 ## Intended use
 This script is intended to prepare a working environment for, install and run MagicMirror2 on a pristine PiOS-lite image. It can easily be set up on SDcards as small as 8GB or possibly even smaller.
 
-## **Important: This script is written under the assumption that the user has a basic understanding of linux and X. If you don't know how to flash an image onto a sd card or download a file onto your linux disto via CLI, it is suggested you use the official installation method on the MagicMirror2 website. Follow the instructions in this README closely and check your preconditions. Using this script wrong WILL BREAK YOUR IMAGE!**
+### **Important: This script is written under the assumption that the user has a basic understanding of linux and X. If you don't know how to flash an image onto a sd card or download a file onto your linux disto via CLI, it is suggested you use the official installation method on the MagicMirror2 website. Follow the instructions in this README closely and check your preconditions. Using this script wrong WILL BREAK YOUR IMAGE!**
 
 ### What it does
 The script asks you to select which steps of the following list you want it to perform. Depending on your selections, some of the following steps may or may not be available:
@@ -27,7 +27,7 @@ The script asks you to select which steps of the following list you want it to p
 - flash a PiOS lite onto an SD card. It is highly recommended to install an SSH key and wifi credentials while you are at it. If you don't, setting it up is your own responsibility, mm-install makes no provision to do so for you.
 - start your Pi, connect to it via your preferred method and do what you feel you need to do to finish the initial configuration
 - use curl to download the script from the following location: `https://raw.githubusercontent.com/tfischer4765/mm-install/latest-release/mm-install.sh`, or if you are feeling adventurous, try replacing `latest-release` with `beta` or even `master`
-- Run the script as root. **ROOT, mind you, *not* SUDO**
+- Run the script in a bash as root. **ROOT, mind you, *not* SUDO - BASH mind you, not just any shell!**
 - answer the configuration questions
 - let the script do its thing
 - perform any cleanup tasks as instructed by the script output
@@ -61,4 +61,18 @@ By default, a background image is rendered alerting you to the fact that no Magi
 If you want to use a different file, create a file named `x_background_image` in `/etc/magicmirror` containing a path to an image file. If that file is present and the path in it leads to a readable file, that file will be attempted to be used instead
 
 **WARNING: The script will not ascertain that the file it gets handed is a valid image file.**
+
+## Troubleshooting
+
+If the script behaves strangely
+- check that you are indeed using the latest 64-bit PiOS lite image
+- check that you are indeed running it as root, not just via sudo
+- check that you are running the script in bash, not some other shell
+- check if the files in /tmp/mm-install look sane
+- check that the directories the script tries to create don't already exist. The script will refuse to run if they do to avoid clobbering existing installs
+- Make sure you haven't previously tried unsuccessfully to run the script. If you've aborted a previous run of the script, it's probably easier to re-flash the SD-card and start over than trying to undo everything
+- check that you have network access and your apt repositories are accessible and up to date
+- Go to the MagicMirror2 discord and ask for help. I'm normally there under my handle of `@drdeath`
+
+If all else fails, go to `https://github.com/tfischer4765/mm-install` and open an issue
 

@@ -5,10 +5,103 @@
 #  - user must be set up correctly to be able to sudo without password
 #  - pi must have internet access
 
+#functions
+fatal() {
+    echo -e "\e[1;31m$1\e[0m"
+    exit 1
+}
+
+banner() {
+    echo
+    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
+    echo -e "\e[1;4;37m$1\e[0m"
+    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
+    echo
+}
+
+
+warn() {
+    # Print the first argument in red and bold
+    echo -e "\e[1;33m$1\e[0m"
+}
+
+
+consent() {
+    local max_tries="${2:-3}"
+     local input=""
+    local attempts=0
+    local matchphrase=$1
+    echo -n "Please enter '$matchphrase' to continue: "
+    while [ "$attempts" -lt "$max_tries" ]; do
+         read -r input
+         if [ "$input" == "$matchphrase" ]; then
+            return 0
+        fi
+
+        attempts=$((attempts + 1))
+        echo -n "Please enter '$matchphrase' to continue ($((max_tries - attempts)) tries left): "
+    done
+
+    echo "Consent not given, exiting."
+    exit 1
+}
+
+# Function to get user confirmation
+yes_no() {
+    local max_tries="${1:-3}"
+    local input=""
+    local attempts=0
+
+    # List of variants for "yes" in different languages
+    local yes_variants=(
+        "yes" "y" "ja" "j" "1"       # English, Dutch, German, Swedish
+        "si" "oui" "sim" "da"        # Spanish, French, Portuguese, Danish
+        "ano" "sì" "hai"             # Czech, Italian, Thai
+    )
+    # List of variants for "no" in different languages
+    local no_variants=(
+        "no" "n" "nein" "0"          # English, Dutch, German
+        "non" "não" "ne" "nie"       # French, Portuguese, Hungarian, Polish
+        "não" "nem" "b"              # Portuguese, Croatian, Finnish
+    )
+
+    echo -n " (y/N): "
+
+    while [ "$attempts" -lt "$max_tries" ]; do
+        read -r input
+        # Convert input to lowercase
+        input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
+
+        # Check if input is in the list of yes variants
+        for yes in "${yes_variants[@]}"; do
+            if [ "$input" == "$yes" ]; then
+                return 1
+            fi
+        done
+
+        # Check if input is in the list of no variants
+        for no in "${no_variants[@]}"; do
+            if [ "$input" == "$no" ]; then
+                return 0
+            fi
+        done
+
+        attempts=$((attempts + 1))
+        if [ "$attempts" -lt "$max_tries" ]; then echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."; fi
+    done
+
+    # If maximum attempts are exceeded, assume 'no'
+    return 0
+}
+
+if [ -e /usr/local/share/mm-support -o -e /usr/local/share/magicmirror -o -e /etc/magicmirror -o -e /tmp/mm-install ]; then
+  fatal "Some of the files and directories this script is supposed to run already exist. Refusing to run to avoid clobbering existing files. Please run this script on a PRISTINE PiOS lite image"
+fi
+
 # embedded files
 
 
-base64 -d > /tmp/xinitrc <<< 'IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
+base64 -d > /tmp/mm-install/xinitrc <<< 'IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
 cgp4c2V0IC1kcG1zICAgICAgICAgIyBkaXNhYmxlIERQTVMgKEVuZXJneSBTdGFyKSBmZWF0dXJl
 cy4KeHNldCBzIG5vYmxhbmsgICAgICMgZG9uJ3QgYmxhbmsgdGhlIHZpZGVvIGRldmljZQoKaWYg
 WyAtciAiL2V0Yy9tYWdpY21pcnJvci94cmFuZHJfb3B0cyIgXTsgdGhlbgoJeHJhbmRyICQoPC9l
@@ -19,12 +112,12 @@ KDwvZXRjL21hZ2ljbWlycm9yL3hfYmFja2dyb3VuZF9pbWFnZSkKZWxzZQoJeGxpIC1vbnJvb3Qg
 L3Vzci9sb2NhbC9zaGFyZS9tbS1zdXBwb3J0L3BpLWJhY2tncm91bmQucG5nCmZpCgpleGVjIC91
 c3IvbG9jYWwvYmluL2JsYWNrcGl4ZWwK'
 
-base64 -d > /tmp/xserver.service <<< 'W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
+base64 -d > /tmp/mm-install/xserver.service <<< 'W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
 CltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpFeGVjU3RhcnQ9L3Vzci9iaW4veGluaXQgL2V0Yy9tYWdp
 Y21pcnJvci94aW5pdHJjIC0tIC1ub2N1cnNvciA6MApSZXN0YXJ0PW9uLWZhaWx1cmUKCltJbnN0
 YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK'
 
-base64 -d > /tmp/magicmirror.service <<<'W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
+base64 -d > /tmp/mm-install/magicmirror.service <<<'W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
 Y3JpcHRpb249TWFnaWNNaXJyb3IKQWZ0ZXI9bmV0d29yay50YXJnZXQKU3RhcnRMaW1pdEludGVy
 dmFsU2VjPTAKCltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpSZXN0YXJ0PWFsd2F5cwpSZXN0YXJ0U2Vj
 PTEKVXNlcj1waQpXb3JraW5nRGlyZWN0b3J5PS91c3IvbG9jYWwvc2hhcmUvbWFnaWNtaXJyb3Iv
@@ -32,7 +125,7 @@ CkV4ZWNTdGFydD0vdXNyL2Jpbi9ucG0gc3RhcnQKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11
 c2VyLnRhcmdldAo='
 
 
-base64 -d > /tmp/blackpixel <<<'f0VMRgIBAQAAAAAAAAAAAAMAtwABAAAAgAsAAAAAAABAAAAAAAAAAMAOAQAAAAAAAAAAAEAAOAAJ
+base64 -d > /tmp/mm-install/blackpixel <<<'f0VMRgIBAQAAAAAAAAAAAAMAtwABAAAAgAsAAAAAAABAAAAAAAAAAMAOAQAAAAAAAAAAAEAAOAAJ
 AEAAHQAcAAYAAAAEAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAA+AEAAAAAAAD4AQAAAAAAAAgA
 AAAAAAAAAwAAAAQAAAA4AgAAAAAAADgCAAAAAAAAOAIAAAAAAAAbAAAAAAAAABsAAAAAAAAAAQAA
 AAAAAAABAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOQQAAAAAAAA5BAAAAAAAAAAAAEA
@@ -1283,7 +1376,7 @@ AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAABEAAAADAAAAAAAAAAAAAAAAAAAAAAAAALsNAQAAAAAA
 AwEAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAA='
 
 
-base64 -d >/tmp/pi_background.png <<<'iVBORw0KGgoAAAANSUhEUgAABDgAAAeACAYAAAArYecKAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9
+base64 -d >/tmp/mm-install/pi_background.png <<<'iVBORw0KGgoAAAANSUhEUgAABDgAAAeACAYAAAArYecKAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9
 kTtIw1AUhv+mSkUqInYQ6ZChOlkQXzhqFYpQIdQKrTqY3PQhNGlIUlwcBdeCg4/FqoOLs64OroIg
 +ABxdnBSdJESz00KLWK8cLgf/73/z7nnAkK9zDSrYxTQdNtMJxNiNrcihl4RQhR9VJMys4xZSUrB
 d33dI8D3uzjP8r/35+pR8xYDAiLxDDNMm3ideGrTNjjvE0dYSVaJz4lHTGqQ+JHrisdvnIsuCzwz
@@ -1615,94 +1708,7 @@ AAAAQJ7AAQAAAOQJHAAAAECewAEAAADk/QGz+FxYg+4BdAAAAABJRU5ErkJggg=='
 
 
 
-fatal() {
-    echo -e "\e[1;31m$1\e[0m"
-    exit 1
-}
 
-banner() {
-    echo
-    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
-    echo -e "\e[1;4;37m$1\e[0m"
-    echo -e "\e[1;37m$(printf '%.0s-' {1..80})\e[0m"
-    echo
-}
-
-
-warn() {
-    # Print the first argument in red and bold
-    echo -e "\e[1;33m$1\e[0m"
-}
-
-
-consent() {
-    local max_tries="${2:-3}"
-     local input=""
-    local attempts=0
-    local matchphrase=$1
-    echo -n "Please enter '$matchphrase' to continue: "
-    while [ "$attempts" -lt "$max_tries" ]; do
-         read -r input
-         if [ "$input" == "$matchphrase" ]; then
-            return 0
-        fi
-
-        attempts=$((attempts + 1))
-        echo -n "Please enter '$matchphrase' to continue ($((max_tries - attempts)) tries left): "
-    done
-
-    echo "Consent not given, exiting."
-    exit 1
-}
-
-# Function to get user confirmation
-yes_no() {
-    local max_tries="${1:-3}"
-    local input=""
-    local attempts=0
-
-    # List of variants for "yes" in different languages
-    local yes_variants=(
-        "yes" "y" "ja" "j" "1"       # English, Dutch, German, Swedish
-        "si" "oui" "sim" "da"        # Spanish, French, Portuguese, Danish
-        "ano" "sì" "hai"             # Czech, Italian, Thai
-    )
-    # List of variants for "no" in different languages
-    local no_variants=(
-        "no" "n" "nein" "0"          # English, Dutch, German
-        "non" "não" "ne" "nie"       # French, Portuguese, Hungarian, Polish
-        "não" "nem" "b"              # Portuguese, Croatian, Finnish
-    )
-
-    echo -n " (y/N): "
-
-    while [ "$attempts" -lt "$max_tries" ]; do
-        read -r input
-        # Convert input to lowercase
-        input=$(echo "$input" | tr '[:upper:]' '[:lower:]')
-
-        # Check if input is in the list of yes variants
-        for yes in "${yes_variants[@]}"; do
-            if [ "$input" == "$yes" ]; then
-                return 1
-            fi
-        done
-
-        # Check if input is in the list of no variants
-        for no in "${no_variants[@]}"; do
-            if [ "$input" == "$no" ]; then
-                return 0
-            fi
-        done
-
-        attempts=$((attempts + 1))
-        if [ "$attempts" -lt "$max_tries" ]; then echo "Please enter 'yes' or 'no' to continue $((max_tries - attempts)) tries left."; fi
-    done
-
-    # If maximum attempts are exceeded, assume 'no'
-    return 0
-}
-#set up some environment variables
 
 
 #Check if we are running with root access
@@ -1772,6 +1778,8 @@ fi
 
 #install the necessary software
 
+
+
 banner "Installing required system packages"
 
 apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip xli
@@ -1784,14 +1792,14 @@ apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy
 #TODO xinitrc should probably be in mm-support, but I'm too lazy to re-create the base64 for the unit file AGAIN right now
 mkdir -p /usr/local/share/mm-support && \
 mkdir /etc/magicmirror && \
-cp /tmp/xserver.service /usr/local/share/mm-support/xserver.service && \
+cp /tmp/mm-install/xserver.service /usr/local/share/mm-support/xserver.service && \
 ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
-cp /tmp/xinitrc /usr/local/share/mm-support/xinitrc && \
+cp /tmp/mm-install/xinitrc /usr/local/share/mm-support/xinitrc && \
 ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc && \
-cp /tmp/blackpixel /usr/local/share/mm-support/blackpixel && \
+cp /tmp/mm-install/blackpixel /usr/local/share/mm-support/blackpixel && \
 chmod +x /usr/local/share/mm-support/blackpixel && \
 ln -s /usr/local/share/mm-support/blackpixel /usr/local/bin/blackpixel && \
-cp /tmp/pi_background.png /usr/local/share/mm-support/pi-background.png && \
+cp /tmp/mm-install/pi_background.png /usr/local/share/mm-support/pi-background.png && \
 echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.config && \
 systemctl daemon-reload && \
 systemctl enable xserver.service && \
@@ -1842,6 +1850,8 @@ if [[ -v INSTALL_MM ]]; then
   fi
 
 fi
+
+rm -rf /tmp/mm-install
 
 echo
 banner "Install is done. System is ready to use."
