@@ -26,7 +26,7 @@ The script asks you to select which steps of the following list you want it to p
 ## Installation
 - flash a PiOS lite onto an SD card. It is highly recommended to install an SSH key and wifi credentials while you are at it. If you don't, setting it up is your own responsibility, mm-install makes no provision to do so for you.
 - start your Pi, connect to it via your preferred method and do what you feel you need to do to finish the initial configuration
-- use curl to download the script from the following location: `https://raw.githubusercontent.com/tfischer4765/mm-install/latest-release/mm-install.sh`, or if you are feeling adventurous, try `https://raw.githubusercontent.com/tfischer4765/mm-install/master/mm-install.sh`
+- use curl to download the script from the following location: `https://raw.githubusercontent.com/tfischer4765/mm-install/latest-release/mm-install.sh`, or if you are feeling adventurous, try replacing `latest-release` with `beta` or even `master`
 - Run the script as root. **ROOT, mind you, *not* SUDO**
 - answer the configuration questions
 - let the script do its thing
