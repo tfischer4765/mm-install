@@ -1,6 +1,8 @@
 # mm-install 
 A single-script-installer to turn PiOS-lite into a magic mirror with minimal ressource wasteage
 
+### **WARNING: This script is currently in beta. Please use with caution and expect bugs**
+
 
 ## Intended use
 This script is intended to prepare a working environment for, install and run MagicMirror2 on a pristine PiOS-lite image. It can easily be set up on SDcards as small as 8GB or possibly even smaller.
