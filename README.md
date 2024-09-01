@@ -56,9 +56,9 @@ To use that possiblity, create a file named xrandr_opts in /etc/magicmirror. In 
 **You are very much encouraged to test the options by manually executing xrandr and observing that the result matches your expectations**
 
 ### Using a custom background image
-By default, a background image is rendered alerting you to the fact that no MagicMirror2 frontend is running. 
+By default, a solid black background is used. 
 
-If you want to use a different file, create a file named `x_background_image` in `/etc/magicmirror` containing a path to an image file. If that file is present and the path in it leads to a readable file, that file will be attempted to be used instead
+If you want to use a different background, create a file named `x_background_image` in `/etc/magicmirror` containing a path to an image file. If that file is present and the path in it leads to a readable file, that file will be attempted to be rendered onto the root window instead
 
 **WARNING: The script will not ascertain that the file it gets handed is a valid image file.**
 
