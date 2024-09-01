@@ -42,7 +42,7 @@ If you selected to link your config to /etc, the following will be available:
 - the config.js file is available in /etc/magicmirror/config/config.js
 - the modules directory is linked to /etc/magicmirror/modules.
 
-If you did chose to NOT link your config, they will be found in /usr/share/magicmirror.
+If you did chose to NOT link your config, they will be found in /usr/local/share/magicmirror.
 
 ## Advanced configuration
 
