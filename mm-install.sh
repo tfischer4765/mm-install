@@ -152,30 +152,25 @@ CltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpFeGVjU3RhcnQ9L3Vzci9iaW4veGluaXQgL2V0Yy9tYWdp
 Y21pcnJvci94aW5pdHJjIC0tIC1ub2N1cnNvciA6MApSZXN0YXJ0PW9uLWZhaWx1cmUKCltJbnN0
 YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK'
 
-# [Unit]
-# Requires=xserver.service
-# After=xserver.service
-# Description=MagicMirror
-# After=network.target
-# StartLimitIntervalSec=0
+cat << 'EOF' >/tmp/mm-install/magicmirror.service
+[Unit]
+Requires=xserver.service
+After=xserver.service
+Description=MagicMirror
+After=network.target
+StartLimitIntervalSec=0
 
-# [Service]
-# Type=simple
-# Restart=always
-# RestartSec=1
-# User=pi
-# WorkingDirectory=/usr/local/share/magicmirror/
-# ExecStart=/usr/bin/npm start
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=magicmirror
+WorkingDirectory=/usr/local/share/magicmirror/
+ExecStart=/usr/bin/npm start
 
-# [Install]
-# WantedBy=multi-user.target
-
-base64 -d > /tmp/mm-install/magicmirror.service <<<'W1VuaXRdClJlcXVpcmVzPXhzZXJ2ZXIuc2VydmljZQpBZnRlcj14c2VydmVyLnNlcnZpY2UKRGVz
-Y3JpcHRpb249TWFnaWNNaXJyb3IKQWZ0ZXI9bmV0d29yay50YXJnZXQKU3RhcnRMaW1pdEludGVy
-dmFsU2VjPTAKCltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpSZXN0YXJ0PWFsd2F5cwpSZXN0YXJ0U2Vj
-PTEKVXNlcj1waQpXb3JraW5nRGlyZWN0b3J5PS91c3IvbG9jYWwvc2hhcmUvbWFnaWNtaXJyb3Iv
-CkV4ZWNTdGFydD0vdXNyL2Jpbi9ucG0gc3RhcnQKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11
-c2VyLnRhcmdldAo='
+[Install]
+WantedBy=multi-user.target
+EOF
 
 
 #Check if we are running with root access
@@ -284,6 +279,7 @@ fi
 
 if [[ -v INSTALL_MM ]]; then
   banner "Installing MagicMirror2"  
+  sudo useradd --system --shell /usr/sbin/nologin magicmirror
   mkdir -p /usr/local/share/magicmirror && \
   cd /usr/local/share/magicmirror && \
   git clone https://github.com/MagicMirrorOrg/MagicMirror . && \
