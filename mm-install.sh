@@ -173,6 +173,16 @@ WantedBy=multi-user.target
 EOF
 
 
+cat << 'EOF' >/tmp/mm-install/99-vc4.conf
+Section "OutputClass"
+    Identifier "vc4"
+    MatchDriver "vc4"
+    Driver "modesetting"
+    Option "PrimaryGPU" "true"
+EndSection
+EOF
+
+
 #Check if we are running with root access
 
 if [ "$EUID" -ne 0 ]
@@ -258,6 +268,8 @@ cp /tmp/mm-install/xserver.service /usr/local/share/mm-support/xserver.service &
 ln -s /usr/local/share/mm-support/xserver.service /etc/systemd/system/xserver.service && \
 cp /tmp/mm-install/xinitrc /usr/local/share/mm-support/xinitrc && \
 ln -s  /usr/local/share/mm-support/xinitrc /etc/magicmirror/xinitrc && \
+cp /tmp/mm-install/99-vc4.conf /usr/local/share/mm-support/99-vc4.conf
+ln -s /usr/local/share/mm-support/99-vc4.conf /etc/X11/xorg.conf.d/99-vc4.conf
 echo -e 'allowed_users=rootonly\nneeds_root_rights=no' > /etc/X11/Xwrapper.config && \
 systemctl daemon-reload && \
 systemctl enable xserver.service && \
