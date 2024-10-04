@@ -190,6 +190,7 @@ if [ "$EUID" -ne 0 ]
   exit 1
 fi
 
+
 #Bug the user with various caveats:
 
 echo "This script will set up your raspberry pi to run a minimal X setup suitable for MagicMirror and not much else."
@@ -254,9 +255,11 @@ fi
 
 banner "Installing required system packages"
 
-apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip xli
+apt-get update && apt-get install -y --no-install-recommends xserver-xorg-core xserver-xorg-legacy x11-xserver-utils xinit git ca-certificates curl gnupg libatk1.0-0 libatk-bridge2.0-0 libcups2 libgtk-3-0 python3-pip xli
 
+#Do a sanity check to make sure everything went all right
 
+command -v git 2&>/dev/null && command -v xinit 2&>/dev/null && command -v xli 2&>/dev/null || fatal "something went wrong installing the software, bailing out..."
 
 
 
