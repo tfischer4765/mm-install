@@ -299,7 +299,7 @@ if [[ -v INSTALL_MM ]]; then
   cd /usr/local/share/magicmirror && \
   git clone https://github.com/MagicMirrorOrg/MagicMirror . && \
   [[ -v INSTALL_NODE ]] && npm run install-mm || \
-  warn "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install\" manually after this script completes and nodejs is installed"
+  warn "You requested not to install node.js, please execute \"cd /usr/local/share/magicmirror && npm run install-mm\" manually after this script completes and nodejs is installed"
 
   
   if [[  -v LINK_CONFIG ]]; then
