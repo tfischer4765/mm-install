@@ -278,14 +278,14 @@ systemctl daemon-reload && \
 systemctl enable xserver.service && \
 echo "Xserver has been installed and configured to run at startup" || \
 fatal "Something went wrong installing the Xserver"
-
+q
 # install node and npm on raspbian
 if [[ -v INSTALL_NODE ]]; then
   # TODO use nvm instead?
     banner "Installing Node.js"
 
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg && \
-  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
+  echo "deb [signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_23.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
   apt update && apt install --no-install-recommends -y nodejs && \
   echo "Node.js has been installed" || \
   fatal "Something went wrong installing Node.js"
