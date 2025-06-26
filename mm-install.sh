@@ -101,56 +101,42 @@ fi
 # embedded files
 mkdir /tmp/mm-install
 
+cat << 'EOF' > /tmp/mm-install/xinitrc 
+#!/bin/sh
 
-# #!/bin/sh
+xset s off         # don't activate screensaver
+xset -dpms         # disable DPMS (Energy Star) features.
+xset s noblank     # don't blank the video device
 
-# xset s off         # don't activate screensaver
-# xset -dpms         # disable DPMS (Energy Star) features.
-# xset s noblank     # don't blank the video device
+if [ -r "/etc/magicmirror/xrandr_opts" ]; then
+       echo "running xrandr with arguments \"$(cat /etc/magicmirror/xrandr_opts)\""
+       DISPLAY=:0 xrandr $(cat /etc/magicmirror/xrandr_opts)
+else
+        echo "not running xrandr"
+fi
 
-# if [ -r "/etc/magicmirror/xrandr_opts" ]; then
-#        echo "running xrandr with arguments \"$(cat /etc/magicmirror/xrandr_opts)\""
-#        DISPLAY=:0 xrandr $(cat /etc/magicmirror/xrandr_opts)
-# else
-#         echo "not running xrandr"
-# fi
+xsetroot -solid black
 
-# xsetroot -solid black
+if [ -r "/etc/magicmirror/x_background_image" ] && [ -r "$(cat /etc/magicmirror/x_background_image)" ]; then
+        xli -onroot $(cat /etc/magicmirror/x_background_image)
+fi
 
-# if [ -r "/etc/magicmirror/x_background_image" ] && [ -r "$(cat /etc/magicmirror/x_background_image)" ]; then
-#         xli -onroot $(cat /etc/magicmirror/x_background_image)
-# fi
+while :; do sleep 10000; done
+EOF
 
-# while :; do sleep 10000; done
+cat << 'EOF' > /tmp/mm-install/xserver.service
+[Unit]
+Description=Minimal X Server
+After=network.target
 
-base64 -d > /tmp/mm-install/xinitrc <<< 'IyEvYmluL3NoCgp4c2V0IHMgb2ZmICAgICAgICAgIyBkb24ndCBhY3RpdmF0ZSBzY3JlZW5zYXZl
-cgp4c2V0IC1kcG1zICAgICAgICAgIyBkaXNhYmxlIERQTVMgKEVuZXJneSBTdGFyKSBmZWF0dXJl
-cy4KeHNldCBzIG5vYmxhbmsgICAgICMgZG9uJ3QgYmxhbmsgdGhlIHZpZGVvIGRldmljZQoKaWYg
-WyAtciAiL2V0Yy9tYWdpY21pcnJvci94cmFuZHJfb3B0cyIgXTsgdGhlbgogICAgICAgZWNobyAi
-cnVubmluZyB4cmFuZHIgd2l0aCBhcmd1bWVudHMgXCIkKGNhdCAvZXRjL21hZ2ljbWlycm9yL3hy
-YW5kcl9vcHRzKVwiIgogICAgICAgRElTUExBWT06MCB4cmFuZHIgJChjYXQgL2V0Yy9tYWdpY21p
-cnJvci94cmFuZHJfb3B0cykKZWxzZQoJZWNobyAibm90IHJ1bm5pbmcgeHJhbmRyIgpmaQoKeHNl
-dHJvb3QgLXNvbGlkIGJsYWNrCgppZiBbIC1yICIvZXRjL21hZ2ljbWlycm9yL3hfYmFja2dyb3Vu
-ZF9pbWFnZSIgXSAmJiBbIC1yICIkKGNhdCAvZXRjL21hZ2ljbWlycm9yL3hfYmFja2dyb3VuZF9p
-bWFnZSkiIF07IHRoZW4KCXhsaSAtb25yb290ICQoY2F0IC9ldGMvbWFnaWNtaXJyb3IveF9iYWNr
-Z3JvdW5kX2ltYWdlKQpmaQoKd2hpbGUgOjsgZG8gc2xlZXAgMTAwMDA7IGRvbmUKCg=='
+[Service]
+Type=simple
+ExecStart=/usr/bin/xinit /etc/magicmirror/xinitrc -- -nocursor :0
+Restart=on-failure
 
-# [Unit]
-# Description=Minimal X Server
-# After=network.target
-
-# [Service]
-# Type=simple
-# ExecStart=/usr/bin/xinit /etc/magicmirror/xinitrc -- -nocursor :0
-# Restart=on-failure
-
-# [Install]
-# WantedBy=multi-user.target
-
-base64 -d > /tmp/mm-install/xserver.service <<< 'W1VuaXRdCkRlc2NyaXB0aW9uPU1pbmltYWwgWCBTZXJ2ZXIKQWZ0ZXI9bmV0d29yay50YXJnZXQK
-CltTZXJ2aWNlXQpUeXBlPXNpbXBsZQpFeGVjU3RhcnQ9L3Vzci9iaW4veGluaXQgL2V0Yy9tYWdp
-Y21pcnJvci94aW5pdHJjIC0tIC1ub2N1cnNvciA6MApSZXN0YXJ0PW9uLWZhaWx1cmUKCltJbnN0
-YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAoK'
+[Install]
+WantedBy=multi-user.target
+EOF
 
 cat << 'EOF' >/tmp/mm-install/magicmirror.service
 [Unit]
