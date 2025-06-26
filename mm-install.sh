@@ -294,7 +294,7 @@ fi
 
 if [[ -v INSTALL_MM ]]; then
   banner "Installing MagicMirror2"  
-  sudo useradd --shell /usr/sbin/nologin magicmirror
+  sudo useradd magicmirror
   mkdir -p /usr/local/share/magicmirror && \
   cd /usr/local/share/magicmirror && \
   git clone https://github.com/MagicMirrorOrg/MagicMirror . && \
